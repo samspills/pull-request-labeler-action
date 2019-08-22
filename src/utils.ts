@@ -1,6 +1,15 @@
 import { IssuesRemoveLabelParams, PullsListFilesResponseItem } from '@octokit/rest';
 import { Filter, Repository } from './types';
 
+export const addedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
+    files.filter(file => (file.status == "Added"));
+
+export const modifiedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
+    files.filter(file => (file.status == "Modified"));
+
+export const deletedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
+    files.filter(file => (file.status == "Deleted"))
+
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 export const processListFilesResponses = (files: PullsListFilesResponseItem[], filters: Filter[]): Filter[] =>
   filters.filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename)));
