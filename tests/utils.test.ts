@@ -6,8 +6,13 @@ import { buildIssueRemoveLabelParams, filterConfiguredIssueLabels, intersectLabe
 const IMAGE_REGEXP_AS_STRING: string = ".*\\.png+$";
 const DOCUMENTATION_REGEXP_AS_STRING: string = ".*\\.md+$";
 const IMAGES_FILTER: Filter = { labels: ["images"], regExp: IMAGE_REGEXP_AS_STRING };
+const NEW_IMAGES_FILTER: Filter = { labels: ["new-images"], regExp: IMAGE_REGEXP_AS_STRING, addedOnly: true };
 const DOCUMENTATION_FILTER: Filter = { labels: ["documentation"], regExp: DOCUMENTATION_REGEXP_AS_STRING };
-const ANY_FILTERS: Filter[] = [IMAGES_FILTER, DOCUMENTATION_FILTER];
+const MODIFIED_DOCUMENTATION_FILTER: Filter = { labels: ["updated-documentation"], regExp: DOCUMENTATION_REGEXP_AS_STRING, modifiedOnly: true };
+const DELETED_DOCUMENTATION_FILTER: Filter = { labels: ["removed-documentation"], regExp: DOCUMENTATION_REGEXP_AS_STRING, deletedOnly: true };
+const ANY_FILTERS: Filter[] = [IMAGES_FILTER, DOCUMENTATION_FILTER, NEW_IMAGES_FILTER, MODIFIED_DOCUMENTATION_FILTER, DELETED_DOCUMENTATION_FILTER];
+const NON_STATUS_FILTERS: Filter[] = [IMAGES_FILTER, DOCUMENTATION_FILTER];
+const ONLY_STATUS_FILTERS: Filter[] = [NEW_IMAGES_FILTER, MODIFIED_DOCUMENTATION_FILTER, DELETED_DOCUMENTATION_FILTER];
 const ANY_FILTERS_WITH_DUPLICATES: Filter[] = [{
   ...IMAGES_FILTER,
   labels: ["images", "documentation"]
@@ -25,104 +30,104 @@ describe('File type regex checker', () => {
 });
 
 describe('addedFiles', () => {
-    const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        additions: 10,
-        blob_url: "blob_url",
-        changes: 0,
-        contents_url: "contents_url",
-        deletions: 0,
-        filename: "filename",
-        patch: "patch",
-        raw_url: "raw_url",
-        sha: "sha",
-        status: "Added"
-    };
-
-    const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        ...NEW_RESPONSE_ITEM,
-        status: "Modified"
-    };
-
-    it('should return an empty array if no files are provided',
-        () => expect(addedFiles([])).toEqual([]));
-
-    it('should return an empty array if no new files are provided',
-        () => expect(addedFiles([MODIFIED_RESPONSE_ITEM])).toEqual([]));
-
-    it('should return an array of files with only additions',
-        () => expect(addedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM])).toEqual([NEW_RESPONSE_ITEM]));
-})
-
-describe('modifiedFiles', () => {
-    const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        additions: 10,
-        blob_url: "blob_url",
-        changes: 0,
-        contents_url: "contents_url",
-        deletions: 0,
-        filename: "filename",
-        patch: "patch",
-        raw_url: "raw_url",
-        sha: "sha",
-        status: "Added"
-    };
-
-    const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        ...NEW_RESPONSE_ITEM,
-        status: "Modified"
-    };
-
-    it('should return an empty array if no files are provided',
-        () => expect(modifiedFiles([])).toEqual([]));
-
-    it('should return an empty array if no modified files are provided',
-        () => expect(modifiedFiles([NEW_RESPONSE_ITEM])).toEqual([]));
-
-    it('should return an array of files that have been modified',
-        () => expect(modifiedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM])).toEqual([MODIFIED_RESPONSE_ITEM]));
-})
-
-describe('deletedFiles', () => {
-    const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        additions: 10,
-        blob_url: "blob_url",
-        changes: 0,
-        contents_url: "contents_url",
-        deletions: 0,
-        filename: "filename",
-        patch: "patch",
-        raw_url: "raw_url",
-        sha: "sha",
-        status: "Added"
-    };
-
-    const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        ...NEW_RESPONSE_ITEM,
-        status: "Modified"
-    };
-
-    const DELETED_RESPONSE_ITEM: PullsListFilesResponseItem = {
-        ...NEW_RESPONSE_ITEM,
-        status: "Deleted"
-    }
-
-    it('should return an empty array if no files are provided',
-        () => expect(deletedFiles([])).toEqual([]));
-
-    it('should return an empty array if no modified files are provided',
-        () => expect(deletedFiles([NEW_RESPONSE_ITEM])).toEqual([]));
-
-    it('should return an array of files that have been modified',
-        () => expect(deletedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM, DELETED_RESPONSE_ITEM])).toEqual([DELETED_RESPONSE_ITEM]));
-})
-
-describe('processListFilesResponses', () => {
-  const ANY_RESPONSE_ITEM: PullsListFilesResponseItem = {
-    additions: 0,
+  const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    additions: 10,
     blob_url: "blob_url",
     changes: 0,
     contents_url: "contents_url",
     deletions: 0,
+    filename: "filename",
+    patch: "patch",
+    raw_url: "raw_url",
+    sha: "sha",
+    status: "Added"
+  };
+
+  const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...NEW_RESPONSE_ITEM,
+    status: "Modified"
+  };
+
+  it('should return an empty array if no files are provided',
+    () => expect(addedFiles([])).toEqual([]));
+
+  it('should return an empty array if no new files are provided',
+    () => expect(addedFiles([MODIFIED_RESPONSE_ITEM])).toEqual([]));
+
+  it('should return an array of files with only additions',
+    () => expect(addedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM])).toEqual([NEW_RESPONSE_ITEM]));
+})
+
+describe('modifiedFiles', () => {
+  const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    additions: 10,
+    blob_url: "blob_url",
+    changes: 0,
+    contents_url: "contents_url",
+    deletions: 0,
+    filename: "filename",
+    patch: "patch",
+    raw_url: "raw_url",
+    sha: "sha",
+    status: "Added"
+  };
+
+  const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...NEW_RESPONSE_ITEM,
+    status: "Modified"
+  };
+
+  it('should return an empty array if no files are provided',
+    () => expect(modifiedFiles([])).toEqual([]));
+
+  it('should return an empty array if no modified files are provided',
+    () => expect(modifiedFiles([NEW_RESPONSE_ITEM])).toEqual([]));
+
+  it('should return an array of files that have been modified',
+    () => expect(modifiedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM])).toEqual([MODIFIED_RESPONSE_ITEM]));
+})
+
+describe('deletedFiles', () => {
+  const NEW_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    additions: 10,
+    blob_url: "blob_url",
+    changes: 0,
+    contents_url: "contents_url",
+    deletions: 0,
+    filename: "filename",
+    patch: "patch",
+    raw_url: "raw_url",
+    sha: "sha",
+    status: "Added"
+  };
+
+  const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...NEW_RESPONSE_ITEM,
+    status: "Modified"
+  };
+
+  const DELETED_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...NEW_RESPONSE_ITEM,
+    status: "Deleted"
+  }
+
+  it('should return an empty array if no files are provided',
+    () => expect(deletedFiles([])).toEqual([]));
+
+  it('should return an empty array if no modified files are provided',
+    () => expect(deletedFiles([NEW_RESPONSE_ITEM])).toEqual([]));
+
+  it('should return an array of files that have been modified',
+    () => expect(deletedFiles([NEW_RESPONSE_ITEM, MODIFIED_RESPONSE_ITEM, DELETED_RESPONSE_ITEM])).toEqual([DELETED_RESPONSE_ITEM]));
+})
+
+describe('processListFilesResponses', () => {
+  const ANY_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    additions: 10,
+    blob_url: "blob_url",
+    changes: 10,
+    contents_url: "contents_url",
+    deletions: 10,
     filename: "filename",
     patch: "patch",
     raw_url: "raw_url",
@@ -137,10 +142,25 @@ describe('processListFilesResponses', () => {
     ...ANY_DOCUMENTATION_RESPONSE_ITEM,
     filename: "filename2.md"
   };
-
+  const MODIFIED_DOCUMENTATION_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...ANY_DOCUMENTATION_RESPONSE_ITEM,
+    filename: "filename3.md",
+    status: "Modified"
+  };
+  const DELETED_DOCUMENTATION_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...ANY_DOCUMENTATION_RESPONSE_ITEM,
+    filename: "filename4.md",
+    status: "Deleted"
+  };
   const ANY_IMAGE_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...ANY_RESPONSE_ITEM,
     filename: "whatever.png"
+  };
+
+  const NEW_IMAGE_RESPONSE_ITEM: PullsListFilesResponseItem = {
+    ...ANY_RESPONSE_ITEM,
+    filename: "whatever.png",
+    status: "Added"
   };
 
   it('should return an empty array if no filters are provided',
@@ -152,11 +172,26 @@ describe('processListFilesResponses', () => {
   it('should return an empty array if none filename are defined in filters',
     () => expect(processListFilesResponses([ANY_RESPONSE_ITEM], ANY_FILTERS)).toEqual([]));
 
+  it('should return an empty array if filenames match but statuses do not',
+    () => expect(processListFilesResponses(
+      [ANY_RESPONSE_ITEM, ANY_IMAGE_RESPONSE_ITEM, ANY_DOCUMENTATION_RESPONSE_ITEM],
+      [NEW_IMAGES_FILTER, DELETED_DOCUMENTATION_FILTER])).toEqual([]));
+
   it('should return an array with eligible filter if files are defined for provided filters',
     () => expect(processListFilesResponses([ANY_RESPONSE_ITEM, ANY_DOCUMENTATION_RESPONSE_ITEM], ANY_FILTERS)).toEqual([DOCUMENTATION_FILTER]));
 
-  it('should return an array with all filters if multiple files are defined for provided filters',
-    () => expect(processListFilesResponses([ANY_RESPONSE_ITEM, ANY_DOCUMENTATION_RESPONSE_ITEM, ANY_OTHER_DOCUMENTATION_RESPONSE_ITEM, ANY_IMAGE_RESPONSE_ITEM], ANY_FILTERS)).toEqual(ANY_FILTERS));
+  it('should return an array with eligible status filters if files are defined and match status for provided filters',
+    () => expect(processListFilesResponses(
+      [ANY_RESPONSE_ITEM, NEW_IMAGE_RESPONSE_ITEM, DELETED_DOCUMENTATION_RESPONSE_ITEM],
+      ONLY_STATUS_FILTERS)).toEqual([NEW_IMAGES_FILTER, DELETED_DOCUMENTATION_FILTER]));
+
+  it('should return both non-status and status filters if filename matches regex',
+    () => expect(processListFilesResponses(
+      [ANY_RESPONSE_ITEM, NEW_IMAGE_RESPONSE_ITEM],
+      ANY_FILTERS)).toEqual([IMAGES_FILTER, NEW_IMAGES_FILTER]));
+
+  it('should return an array with non-status filters if multiple files are defined for provided filters but with no status matches',
+    () => expect(processListFilesResponses([ANY_RESPONSE_ITEM, ANY_DOCUMENTATION_RESPONSE_ITEM, ANY_OTHER_DOCUMENTATION_RESPONSE_ITEM, ANY_IMAGE_RESPONSE_ITEM], ANY_FILTERS)).toEqual(NON_STATUS_FILTERS));
 });
 
 describe('filterConfiguredIssueLabels', () => {

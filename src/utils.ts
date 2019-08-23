@@ -2,17 +2,21 @@ import { IssuesRemoveLabelParams, PullsListFilesResponseItem } from '@octokit/re
 import { Filter, Repository } from './types';
 
 export const addedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-    files.filter(file => (file.status == "Added"));
+  files.filter(file => (file.status === "Added"));
 
 export const modifiedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-    files.filter(file => (file.status == "Modified"));
+  files.filter(file => (file.status === "Modified"));
 
 export const deletedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-    files.filter(file => (file.status == "Deleted"))
+  files.filter(file => (file.status === "Deleted"))
 
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 export const processListFilesResponses = (files: PullsListFilesResponseItem[], filters: Filter[]): Filter[] =>
-  filters.filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename)));
+  filters
+    .filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename)))
+    .filter(filter => ((!filter.addedOnly || (filter.addedOnly && addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename))))))
+    .filter(filter => ((!filter.modifiedOnly || (filter.modifiedOnly && modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename))))))
+    .filter(filter => ((!filter.deletedOnly || (filter.deletedOnly && deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename))))));
 
 // Filter the list of provided labels to return those that are part of provided filters
 export const filterConfiguredIssueLabels = (labels: string[], filters: Filter[]): string[] => {
