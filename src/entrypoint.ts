@@ -9,6 +9,7 @@ import { GitHub } from 'actions-toolkit/lib/github';
 import { LoggerFunc, Signale } from 'signale';
 import { Filter, Repository } from './types';
 import { buildIssueRemoveLabelParams, filterConfiguredIssueLabels, intersectLabels, processListFilesResponses } from './utils';
+import * as yaml from 'js-yaml';
 
 const LOGO: string = `
 ██████╗ ███████╗ ██████╗ █████╗ ████████╗██╗  ██╗██╗      ██████╗ ███╗   ██╗
@@ -63,19 +64,30 @@ const getLabelsToAdd = (labels: string[], issueLabels: string[], { log, exit }: 
   return labelsToAdd;
 };
 
+async function fetchContent(
+  client: Toolkit["github"],
+  context: Toolkit["context"],
+  repoPath: string
+): Promise<string> {
+  const response = await client.repos.getContents({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    path: repoPath,
+    ref: context.sha
+  });
+  return Buffer.from(response.data.content, 'base64').toString();
+}
+
 Toolkit.run(async (toolkit: Toolkit) => {
     toolkit.log.info('Open sourced by\n' + LOGO);
 
     toolkit.log.info('Running Action');
 
-  toolkit.log.info(toolkit.workspace + '/')
-  const fs = require('fs');
-  fs.readdir(toolkit.workspace + '/', (err, files) => {
-    files.forEach(file => {
-      toolkit.log.info('Workspace file: ', file);
-    });
-  });
-    const filters: Filter[] = toolkit.config('.github/label-pr.yml');
+  toolkit.log.info('Getting configuration file')
+  const configContent: string = await fetchContent(toolkit.github, toolkit.context, '.github/label-pr.yml')
+  const filters: Filter[] = yaml.safeLoad(configContent)
+
+  // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
     toolkit.log.info(" Configured filters: ", filters);
 
     if (!process.env.GITHUB_EVENT_PATH) {

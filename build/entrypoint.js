@@ -1,7 +1,15 @@
 "use strict";
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const actions_toolkit_1 = require("actions-toolkit");
 const utils_1 = require("./utils");
+const yaml = __importStar(require("js-yaml"));
 const LOGO = `
 ██████╗ ███████╗ ██████╗ █████╗ ████████╗██╗  ██╗██╗      ██████╗ ███╗   ██╗
 ██╔══██╗██╔════╝██╔════╝██╔══██╗╚══██╔══╝██║  ██║██║     ██╔═══██╗████╗  ██║
@@ -49,17 +57,22 @@ const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
     }
     return labelsToAdd;
 };
+async function fetchContent(client, context, repoPath) {
+    const response = await client.repos.getContents({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        path: repoPath,
+        ref: context.sha
+    });
+    return Buffer.from(response.data.content, 'base64').toString();
+}
 actions_toolkit_1.Toolkit.run(async (toolkit) => {
     toolkit.log.info('Open sourced by\n' + LOGO);
     toolkit.log.info('Running Action');
-    toolkit.log.info(toolkit.workspace + '/');
-    const fs = require('fs');
-    fs.readdir(toolkit.workspace + '/', (err, files) => {
-        files.forEach(file => {
-            toolkit.log.info('Workspace file: ', file);
-        });
-    });
-    const filters = toolkit.config('.github/label-pr.yml');
+    toolkit.log.info('Getting configuration file');
+    const configContent = await fetchContent(toolkit.github, toolkit.context, '.github/label-pr.yml');
+    const filters = yaml.safeLoad(configContent);
+    // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
     toolkit.log.info(" Configured filters: ", filters);
     if (!process.env.GITHUB_EVENT_PATH) {
         toolkit.exit.failure('Process env GITHUB_EVENT_PATH is undefined');
