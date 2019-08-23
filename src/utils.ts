@@ -3,13 +3,13 @@ import { Filter, Repository } from './types';
 import { LoggerFunc, Signale } from 'signale';
 
 export const addedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-  files.filter(file => (file.status === "Added"));
+  files.filter(file => (file.status === "added"));
 
 export const modifiedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-  files.filter(file => (file.status === "Modified"));
+  files.filter(file => (file.status === "modified"));
 
 export const deletedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-  files.filter(file => (file.status === "Deleted"))
+  files.filter(file => (file.status === "deleted"))
 
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 export const processListFilesResponses = (files: PullsListFilesResponseItem[], filters: Filter[], log: LoggerFunc & Signale): Filter[] => {

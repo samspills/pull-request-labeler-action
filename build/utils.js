@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addedFiles = (files) => files.filter(file => (file.status === "Added"));
-exports.modifiedFiles = (files) => files.filter(file => (file.status === "Modified"));
-exports.deletedFiles = (files) => files.filter(file => (file.status === "Deleted"));
+exports.addedFiles = (files) => files.filter(file => (file.status === "added"));
+exports.modifiedFiles = (files) => files.filter(file => (file.status === "modified"));
+exports.deletedFiles = (files) => files.filter(file => (file.status === "deleted"));
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 exports.processListFilesResponses = (files, filters, log) => {
     log.info('all files: ', files);

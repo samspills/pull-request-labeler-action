@@ -40,12 +40,12 @@ describe('addedFiles', () => {
     patch: "patch",
     raw_url: "raw_url",
     sha: "sha",
-    status: "Added"
+    status: "added"
   };
 
   const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...NEW_RESPONSE_ITEM,
-    status: "Modified"
+    status: "modified"
   };
 
   it('should return an empty array if no files are provided',
@@ -69,12 +69,12 @@ describe('modifiedFiles', () => {
     patch: "patch",
     raw_url: "raw_url",
     sha: "sha",
-    status: "Added"
+    status: "added"
   };
 
   const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...NEW_RESPONSE_ITEM,
-    status: "Modified"
+    status: "modified"
   };
 
   it('should return an empty array if no files are provided',
@@ -98,17 +98,17 @@ describe('deletedFiles', () => {
     patch: "patch",
     raw_url: "raw_url",
     sha: "sha",
-    status: "Added"
+    status: "added"
   };
 
   const MODIFIED_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...NEW_RESPONSE_ITEM,
-    status: "Modified"
+    status: "modified"
   };
 
   const DELETED_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...NEW_RESPONSE_ITEM,
-    status: "Deleted"
+    status: "deleted"
   }
 
   it('should return an empty array if no files are provided',
@@ -145,12 +145,12 @@ describe('processListFilesResponses', () => {
   const MODIFIED_DOCUMENTATION_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...ANY_DOCUMENTATION_RESPONSE_ITEM,
     filename: "filename3.md",
-    status: "Modified"
+    status: "modified"
   };
   const DELETED_DOCUMENTATION_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...ANY_DOCUMENTATION_RESPONSE_ITEM,
     filename: "filename4.md",
-    status: "Deleted"
+    status: "deleted"
   };
   const ANY_IMAGE_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...ANY_RESPONSE_ITEM,
@@ -160,7 +160,7 @@ describe('processListFilesResponses', () => {
   const NEW_IMAGE_RESPONSE_ITEM: PullsListFilesResponseItem = {
     ...ANY_RESPONSE_ITEM,
     filename: "whatever.png",
-    status: "Added"
+    status: "added"
   };
 
   it('should return an empty array if no filters are provided',
