@@ -21,7 +21,7 @@ export const processListFilesResponses = (files: PullsListFilesResponseItem[], f
   const eligible_added_filters: Filter[] = filters.filter(filter => filter.addedOnly && addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
   log.info(eligible_added_filters);
   log.info(addedFiles(files));
-  log.info(addedFiles(files).find(file => new RegExp('jobs/*/*.rb').test(file.filename)));
+  log.info(addedFiles(files).map(file => [file.filename, new RegExp('jobs/*/*.rb').test(file.filename)]));
   const eligible_modified_filters: Filter[] = filters.filter(filter => filter.modifiedOnly && modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
   const eligible_deleted_filters: Filter[] = filters.filter(filter => filter.deletedOnly && deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
   return [...eligible_nonstatus_filters, ...eligible_added_filters, ...eligible_modified_filters, ...eligible_deleted_filters];
