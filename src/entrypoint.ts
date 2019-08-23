@@ -68,15 +68,14 @@ Toolkit.run(async (toolkit: Toolkit) => {
 
     toolkit.log.info('Running Action');
 
-  const yaml = require('js-yaml')
-  const filters: Filter[] = yaml.safeLoad(await toolkit.github.repos.getContents({
-    owner: toolkit.context.repo.owner,
-    repo: toolkit.context.repo.repo,
-    path: '.github/label-pr.yml',
-    ref: toolkit.context.sha
-  }));
-
-    // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
+  toolkit.log.info(toolkit.workspace + '/')
+  const fs = require('fs');
+  fs.readdir(toolkit.workspace + '/', (err, files) => {
+    files.forEach(file => {
+      toolkit.log.info('Workspace file: ', file);
+    });
+  });
+    const filters: Filter[] = toolkit.config('.github/label-pr.yml');
     toolkit.log.info(" Configured filters: ", filters);
 
     if (!process.env.GITHUB_EVENT_PATH) {

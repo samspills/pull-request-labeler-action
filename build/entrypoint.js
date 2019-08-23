@@ -52,14 +52,14 @@ const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
 actions_toolkit_1.Toolkit.run(async (toolkit) => {
     toolkit.log.info('Open sourced by\n' + LOGO);
     toolkit.log.info('Running Action');
-    const yaml = require('js-yaml');
-    const filters = yaml.safeLoad(await toolkit.github.repos.getContents({
-        owner: toolkit.context.repo.owner,
-        repo: toolkit.context.repo.repo,
-        path: '.github/label-pr.yml',
-        ref: toolkit.context.sha
-    }));
-    // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
+    toolkit.log.info(toolkit.workspace + '/');
+    const fs = require('fs');
+    fs.readdir(toolkit.workspace + '/', (err, files) => {
+        files.forEach(file => {
+            toolkit.log.info('Workspace file: ', file);
+        });
+    });
+    const filters = toolkit.config('.github/label-pr.yml');
     toolkit.log.info(" Configured filters: ", filters);
     if (!process.env.GITHUB_EVENT_PATH) {
         toolkit.exit.failure('Process env GITHUB_EVENT_PATH is undefined');
