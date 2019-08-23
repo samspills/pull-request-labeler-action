@@ -66,21 +66,17 @@ const getLabelsToAdd = (labels: string[], issueLabels: string[], { log, exit }: 
 Toolkit.run(async (toolkit: Toolkit) => {
     toolkit.log.info('Open sourced by\n' + LOGO);
 
-  toolkit.log.info('Running Action');
-  try {
-    const filters: Filter[] = toolkit.config('.github/label-pr.yml');
-  } catch(error) {
-    toolkit.log.info(error.message)
-    toolkit.log.info('Getting config manually')
-    const filters: Filter[] = await toolkit.github.repos.getContents({
-      owner: toolkit.context.repo.owner,
-      repo: toolkit.context.repo.repo,
-      path: '.github/label-pr.yml',
-      ref: toolkit.context.sha
-    });
+    toolkit.log.info('Running Action');
 
-    toolkit.log.info('Filters: ', filters);
-  }
+  const yaml = require('js-yaml')
+  const filters: Filter[] = yaml.safeLoad(await toolkit.github.repos.getContents({
+    owner: toolkit.context.repo.owner,
+    repo: toolkit.context.repo.repo,
+    path: '.github/label-pr.yml',
+    ref: toolkit.context.sha
+  }));
+
+    // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
     toolkit.log.info(" Configured filters: ", filters);
 
     if (!process.env.GITHUB_EVENT_PATH) {
