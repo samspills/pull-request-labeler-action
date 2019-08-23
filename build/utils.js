@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const glob_1 = require("glob");
 exports.addedFiles = (files) => files.filter(file => (file.status === "added"));
 exports.modifiedFiles = (files) => files.filter(file => (file.status === "modified"));
 exports.deletedFiles = (files) => files.filter(file => (file.status === "deleted"));
@@ -13,7 +14,7 @@ exports.processListFilesResponses = (files, filters, log) => {
     const eligible_added_filters = filters.filter(filter => filter.addedOnly && exports.addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
     log.info(eligible_added_filters);
     log.info(exports.addedFiles(files));
-    log.info(exports.addedFiles(files).map(file => [file.filename, new RegExp('jobs/*/*.rb').test(file.filename)]));
+    log.info(exports.addedFiles(files).map(file => [file.filename, new glob_1.glob('jobs/*/*.rb').test(file.filename)]));
     const eligible_modified_filters = filters.filter(filter => filter.modifiedOnly && exports.modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
     const eligible_deleted_filters = filters.filter(filter => filter.deletedOnly && exports.deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
     return [...eligible_nonstatus_filters, ...eligible_added_filters, ...eligible_modified_filters, ...eligible_deleted_filters];
