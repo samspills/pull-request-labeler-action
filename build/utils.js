@@ -5,16 +5,18 @@ exports.modifiedFiles = (files) => files.filter(file => (file.status === "modifi
 exports.deletedFiles = (files) => files.filter(file => (file.status === "deleted"));
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 exports.processListFilesResponses = (files, filters, log) => {
-    log.info('all files: ', files);
-    log.info('file statuses: ', files.map(file => file.status));
-    log.info('added files: ', exports.addedFiles(files));
-    log.info('modified files: ', exports.modifiedFiles(files));
-    log.info('deleted files: ', exports.deletedFiles(files));
-    return (filters
-        .filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename)))
-        .filter(filter => ((!filter.addedOnly || (filter.addedOnly && exports.addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename))))))
-        .filter(filter => ((!filter.modifiedOnly || (filter.modifiedOnly && exports.modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename))))))
-        .filter(filter => ((!filter.deletedOnly || (filter.deletedOnly && exports.deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)))))));
+    log.info('file statuses: ', files.map(file => [file.filename, file.status]));
+    const eligible_nonstatus_filters = filters.filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename))
+        && !filter.addedOnly
+        && !filter.modifiedOnly
+        && !filter.deletedOnly);
+    const eligible_added_filters = filters.filter(filter => filter.addedOnly && exports.addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
+    log.info(eligible_added_filters);
+    log.info(exports.addedFiles(files));
+    log.info(exports.addedFiles(files).find(file => new RegExp('jobs/*/*.rb').test(file.filename)));
+    const eligible_modified_filters = filters.filter(filter => filter.modifiedOnly && exports.modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
+    const eligible_deleted_filters = filters.filter(filter => filter.deletedOnly && exports.deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
+    return [...eligible_nonstatus_filters, ...eligible_added_filters, ...eligible_modified_filters, ...eligible_deleted_filters];
 };
 // Filter the list of provided labels to return those that are part of provided filters
 exports.filterConfiguredIssueLabels = (labels, filters) => {
