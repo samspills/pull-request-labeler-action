@@ -107,7 +107,7 @@ Toolkit.run(async (toolkit: Toolkit) => {
           toolkit.log.info('Checking files...', files.reduce((acc: string[], file: PullsListFilesResponseItem) => acc.concat(file.filename), []));
           return files;
         })
-        .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters))
+        .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters, toolkit.log))
         .then((eligibleFilters: Filter[]) => eligibleFilters.reduce((acc: string[], eligibleFilter: Filter) => acc.concat(eligibleFilter.labels), []))
         .then((labels: string[]) => {
             removeIssueLabels(intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);

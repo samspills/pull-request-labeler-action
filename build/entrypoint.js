@@ -89,7 +89,7 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
             toolkit.log.info('Checking files...', files.reduce((acc, file) => acc.concat(file.filename), []));
             return files;
         })
-            .then((files) => utils_1.processListFilesResponses(files, filters))
+            .then((files) => utils_1.processListFilesResponses(files, filters, toolkit.log))
             .then((eligibleFilters) => eligibleFilters.reduce((acc, eligibleFilter) => acc.concat(eligibleFilter.labels), []))
             .then((labels) => {
             removeIssueLabels(utils_1.intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);
