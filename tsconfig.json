@@ -14,7 +14,7 @@
   ],
   "exclude": [
     "node_modules/**",
-    "build/"
+      "**/*.test.js"
   ],
-  "compileOnSave": false
+  "compileOnSave": true
 }

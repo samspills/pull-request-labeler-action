@@ -1,0 +1,6 @@
+name: 'pull-request-labeler-action'
+description: 'Dynamically tag your pull requests with custom labels based on changed files'
+author: 'Sam Pillsworth'
+runs:
+  using: 'node12'
+  main: 'build/entrypoint.js'
