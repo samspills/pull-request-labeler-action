@@ -96,14 +96,26 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
             .catch(reason => toolkit.exit.failure(reason));
         await labelsToProcess
             .then((labels) => getLabelsToRemove(labels, issueLabels, toolkit))
+            .then((labelsToRemove) => {
+            if (labelsToRemove.length === 0) {
+                throw ('No labels to remove; abandoning removal process');
+            }
+            return labelsToRemove;
+        })
             .then((labelsToRemove) => labelsToRemove.map(label => ({ issue_number, name: label, owner, repo })))
             .then((removeLabelParams) => removeLabelParams.map(params => issues.removeLabel(params)))
-            .catch(reason => toolkit.exit.failure(reason));
+            .catch(reason => toolkit.log.error(reason));
         await labelsToProcess
             .then((labels) => getLabelsToAdd(labels, issueLabels, toolkit))
+            .then((labelsToAdd) => {
+            if (labelsToAdd.length === 0) {
+                throw ('No labels to add; abandoning addition process');
+            }
+            return labelsToAdd;
+        })
             .then((labelsToAdd) => ({ issue_number, labels: labelsToAdd, owner, repo }))
             .then((addLabelsParams) => issues.addLabels(addLabelsParams))
-            .catch(reason => toolkit.exit.failure(reason));
+            .catch(reason => toolkit.log.error(reason));
     }
     toolkit.exit.success('Labels were update into pull request');
 }, args);
