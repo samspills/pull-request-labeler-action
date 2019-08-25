@@ -46,7 +46,7 @@ const getLabelsToRemove = (labels, issueLabels, { log, exit }) => {
     const labelsToRemove = utils_1.intersectLabels(issueLabels, labels);
     log.info('Labels to remove: ', labelsToRemove);
     if (labelsToRemove.length === 0) {
-        exit.neutral("No labels to remove");
+        log.info("No labels to remove");
     }
     return labelsToRemove;
 };
@@ -104,7 +104,7 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
         })
             .then((labelsToRemove) => labelsToRemove.map(label => ({ issue_number, name: label, owner, repo })))
             .then((removeLabelParams) => removeLabelParams.map(params => issues.removeLabel(params)))
-            .catch(reason => toolkit.log.error(reason));
+            .catch(reason => toolkit.log.info(reason));
         await labelsToProcess
             .then((labels) => getLabelsToAdd(labels, issueLabels, toolkit))
             .then((labelsToAdd) => {
@@ -115,7 +115,7 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
         })
             .then((labelsToAdd) => ({ issue_number, labels: labelsToAdd, owner, repo }))
             .then((addLabelsParams) => issues.addLabels(addLabelsParams))
-            .catch(reason => toolkit.log.error(reason));
+            .catch(reason => toolkit.log.info(reason));
     }
     toolkit.exit.success('Labels were update into pull request');
 }, args);
