@@ -44,18 +44,16 @@ const findIssueLabels = (issuesListLabelsOnIssueParams, issues, filters) => {
 };
 const getLabelsToRemove = (labels, issueLabels, { log, exit }) => {
     const labelsToRemove = utils_1.intersectLabels(issueLabels, labels);
-    log.info('Labels to remove: ', labelsToRemove);
-    if (labelsToRemove.length === 0) {
-        log.info("No labels to remove");
+    if (labelsToRemove.length > 0) {
+        log.info('Labels to remove: ', labelsToRemove);
     }
     return labelsToRemove;
 };
 // Build labels to add
 const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
     const labelsToAdd = utils_1.intersectLabels(labels, issueLabels);
-    log.info('Labels to add: ', labelsToAdd);
-    if (labelsToAdd.length === 0) {
-        log.info("No labels to add");
+    if (labelsToAdd.length > 0) {
+        log.info('Labels to add: ', labelsToAdd);
     }
     return labelsToAdd;
 };
@@ -88,7 +86,8 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
         const labelsToProcess = listFiles(params)
             .then((response) => response.data)
             .then((files) => {
-            toolkit.log.info('Checking files...', files.reduce((acc, file) => acc.concat(file.filename), []));
+            toolkit.log.info('Checking files...');
+            files.map(file => toolkit.log.info(file.filename, file.status));
             return files;
         })
             .then((files) => utils_1.processListFilesResponses(files, filters, toolkit.log))
@@ -117,6 +116,6 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
             .then((addLabelsParams) => issues.addLabels(addLabelsParams))
             .catch(reason => toolkit.log.info(reason));
     }
-    toolkit.exit.success('Labels were update into pull request');
+    toolkit.exit.success('Labels were successfully updated');
 }, args);
 //# sourceMappingURL=entrypoint.js.map

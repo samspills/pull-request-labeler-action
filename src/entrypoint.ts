@@ -49,9 +49,8 @@ const findIssueLabels = (issuesListLabelsOnIssueParams: IssuesListLabelsOnIssueP
 
 const getLabelsToRemove = (labels: string[], issueLabels: string[], { log, exit }: Toolkit): string[] => {
   const labelsToRemove: string[] = intersectLabels(issueLabels, labels);
-  log.info('Labels to remove: ', labelsToRemove);
-  if (labelsToRemove.length === 0) {
-    log.info("No labels to remove");
+  if (labelsToRemove.length > 0) {
+    log.info('Labels to remove: ', labelsToRemove);
   }
   return labelsToRemove;
 };
@@ -59,9 +58,8 @@ const getLabelsToRemove = (labels: string[], issueLabels: string[], { log, exit 
 // Build labels to add
 const getLabelsToAdd = (labels: string[], issueLabels: string[], { log, exit }: Toolkit): string[] => {
   const labelsToAdd: string[] = intersectLabels(labels, issueLabels);
-  log.info('Labels to add: ', labelsToAdd);
-  if (labelsToAdd.length === 0) {
-    log.info("No labels to add");
+  if (labelsToAdd.length > 0) {
+    log.info('Labels to add: ', labelsToAdd);
   }
   return labelsToAdd;
 };
@@ -106,7 +104,8 @@ Toolkit.run(async (toolkit: Toolkit) => {
     const labelsToProcess: Promise<void | string[]> = listFiles(params)
       .then((response: Response<PullsListFilesResponse>) => response.data)
       .then((files: PullsListFilesResponseItem[]) => {
-        toolkit.log.info('Checking files...', files.reduce((acc: string[], file: PullsListFilesResponseItem) => acc.concat(file.filename), []));
+        toolkit.log.info('Checking files...')
+        files.map(file => toolkit.log.info(file.filename, file.status));
         return files;
       })
       .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters, toolkit.log))
@@ -137,7 +136,7 @@ Toolkit.run(async (toolkit: Toolkit) => {
       .then((addLabelsParams: IssuesAddLabelsParams) => issues.addLabels(addLabelsParams))
       .catch(reason => toolkit.log.info(reason));
   }
-  toolkit.exit.success('Labels were update into pull request')
+  toolkit.exit.success('Labels were successfully updated')
 },
   args
 );
