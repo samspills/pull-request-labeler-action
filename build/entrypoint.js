@@ -42,11 +42,13 @@ const findIssueLabels = (issuesListLabelsOnIssueParams, issues, filters) => {
         .then(({ data: labels }) => labels.reduce((acc, label) => acc.concat(label.name), []))
         .then(issueLabels => utils_1.filterConfiguredIssueLabels(issueLabels, filters));
 };
-// Remove provided labels
-const removeIssueLabels = (labels, { log, exit }, repository, issues) => {
-    log.info('Labels to remove: ', labels);
-    utils_1.buildIssueRemoveLabelParams(repository, labels)
-        .forEach(value => issues.removeLabel(value).catch(reason => log.error(reason.message)));
+const getLabelsToRemove = (labels, issueLabels, { log, exit }) => {
+    const labelsToRemove = utils_1.intersectLabels(issueLabels, labels);
+    log.info('Labels to remove: ', labelsToRemove);
+    if (labelsToRemove.length === 0) {
+        exit.neutral("No labels to remove");
+    }
+    return labelsToRemove;
 };
 // Build labels to add
 const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
@@ -83,7 +85,7 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
         // First, we need to retrieve the existing issue labels and filter them over the configured one in config file
         const issueLabels = await findIssueLabels({ issue_number, owner, repo }, issues, filters);
         const params = { owner, pull_number: issue_number, repo };
-        await listFiles(params)
+        const labelsToProcess = listFiles(params)
             .then((response) => response.data)
             .then((files) => {
             toolkit.log.info('Checking files...', files.reduce((acc, file) => acc.concat(file.filename), []));
@@ -91,12 +93,16 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
         })
             .then((files) => utils_1.processListFilesResponses(files, filters, toolkit.log))
             .then((eligibleFilters) => eligibleFilters.reduce((acc, eligibleFilter) => acc.concat(eligibleFilter.labels), []))
-            .then((labels) => {
-            removeIssueLabels(utils_1.intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);
-            return { issue_number, labels: getLabelsToAdd(labels, issueLabels, toolkit), owner, repo };
-        })
+            .catch(reason => toolkit.exit.failure(reason));
+        await labelsToProcess
+            .then((labels) => getLabelsToRemove(labels, issueLabels, toolkit))
+            .then((labelsToRemove) => labelsToRemove.map(label => ({ issue_number, name: label, owner, repo })))
+            .then((removeLabelParams) => removeLabelParams.map(params => issues.removeLabel(params)))
+            .catch(reason => toolkit.exit.failure(reason));
+        await labelsToProcess
+            .then((labels) => getLabelsToAdd(labels, issueLabels, toolkit))
+            .then((labelsToAdd) => ({ issue_number, labels: labelsToAdd, owner, repo }))
             .then((addLabelsParams) => issues.addLabels(addLabelsParams))
-            .then((value) => toolkit.log.info(`Adding label status: ${value.status}`))
             .catch(reason => toolkit.exit.failure(reason));
     }
     toolkit.exit.success('Labels were update into pull request');

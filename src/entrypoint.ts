@@ -1,4 +1,4 @@
-import { IssuesAddLabelsParams, IssuesAddLabelsResponseItem, IssuesListLabelsOnIssueParams, IssuesListLabelsOnIssueResponse, PullsListFilesParams, PullsListFilesResponse, PullsListFilesResponseItem, Response } from '@octokit/rest';
+import { IssuesAddLabelsParams, IssuesRemoveLabelParams, IssuesAddLabelsResponseItem, IssuesRemoveLabelResponseItem, IssuesListLabelsOnIssueParams, IssuesListLabelsOnIssueResponse, PullsListFilesParams, PullsListFilesResponse, PullsListFilesResponseItem, Response } from '@octokit/rest';
 import { Toolkit, ToolkitOptions } from 'actions-toolkit';
 // tslint:disable-next-line:no-submodule-imports
 import { WebhookPayloadWithRepository } from 'actions-toolkit/lib/context';
@@ -47,11 +47,13 @@ const findIssueLabels = (issuesListLabelsOnIssueParams: IssuesListLabelsOnIssueP
     .then(issueLabels => filterConfiguredIssueLabels(issueLabels, filters));
 };
 
-// Remove provided labels
-const removeIssueLabels = (labels: string[], { log, exit }: Toolkit, repository: Repository, issues): void => {
-  log.info('Labels to remove: ', labels);
-  buildIssueRemoveLabelParams(repository, labels)
-    .forEach(value => issues.removeLabel(value).catch(reason => log.error(reason.message)));
+const getLabelsToRemove = (labels: string[], issueLabels: string[], { log, exit }: Toolkit): string[] => {
+  const labelsToRemove: string[] = intersectLabels(issueLabels, labels);
+  log.info('Labels to remove: ', labelsToRemove);
+  if (labelsToRemove.length === 0) {
+    exit.neutral("No labels to remove");
+  }
+  return labelsToRemove;
 };
 
 // Build labels to add
@@ -101,7 +103,7 @@ Toolkit.run(async (toolkit: Toolkit) => {
 
     const params: PullsListFilesParams = { owner, pull_number: issue_number, repo };
 
-    await listFiles(params)
+    const labelsToProcess: Promise<void | string[]> = listFiles(params)
       .then((response: Response<PullsListFilesResponse>) => response.data)
       .then((files: PullsListFilesResponseItem[]) => {
         toolkit.log.info('Checking files...', files.reduce((acc: string[], file: PullsListFilesResponseItem) => acc.concat(file.filename), []));
@@ -109,13 +111,18 @@ Toolkit.run(async (toolkit: Toolkit) => {
       })
       .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters, toolkit.log))
       .then((eligibleFilters: Filter[]) => eligibleFilters.reduce((acc: string[], eligibleFilter: Filter) => acc.concat(eligibleFilter.labels), []))
-      .then((labels: string[]) => {
-        removeIssueLabels(intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);
-        return { issue_number, labels: getLabelsToAdd(labels, issueLabels, toolkit), owner, repo };
-      }
-      )
+      .catch(reason => toolkit.exit.failure(reason));
+
+    await labelsToProcess
+      .then((labels: string[]) => getLabelsToRemove(labels, issueLabels, toolkit))
+      .then((labelsToRemove: string[]) => labelsToRemove.map(label => ({ issue_number, name: label, owner, repo })))
+      .then((removeLabelParams: IssuesRemoveLabelParams[]) => removeLabelParams.map(params => issues.removeLabel(params)))
+      .catch(reason => toolkit.exit.failure(reason));
+
+    await labelsToProcess
+      .then((labels: string[]) => getLabelsToAdd(labels, issueLabels, toolkit))
+      .then((labelsToAdd: string[]) => ({ issue_number, labels: labelsToAdd, owner, repo }))
       .then((addLabelsParams: IssuesAddLabelsParams) => issues.addLabels(addLabelsParams))
-      .then((value: Response<IssuesAddLabelsResponseItem[]>) => toolkit.log.info(`Adding label status: ${value.status}`))
       .catch(reason => toolkit.exit.failure(reason));
   }
   toolkit.exit.success('Labels were update into pull request')
