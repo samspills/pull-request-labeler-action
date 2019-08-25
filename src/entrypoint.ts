@@ -51,7 +51,7 @@ const findIssueLabels = (issuesListLabelsOnIssueParams: IssuesListLabelsOnIssueP
 const removeIssueLabels = (labels: string[], { log, exit }: Toolkit, repository: Repository, issues): void => {
   log.info('Labels to remove: ', labels);
   buildIssueRemoveLabelParams(repository, labels)
-    .forEach(value => issues.removeLabel(value).catch(reason => exit.failure(reason)));
+    .forEach(value => issues.removeLabel(value).catch(reason => log.error(reason.message)));
 };
 
 // Build labels to add
@@ -79,46 +79,46 @@ async function fetchContent(
 }
 
 Toolkit.run(async (toolkit: Toolkit) => {
-    toolkit.log.info('Open sourced by\n' + LOGO);
+  toolkit.log.info('Open sourced by\n' + LOGO);
 
-    toolkit.log.info('Running Action');
+  toolkit.log.info('Running Action');
 
   toolkit.log.info('Getting configuration file')
   const configContent: string = await fetchContent(toolkit.github, toolkit.context, '.github/label-pr.yml')
   const filters: Filter[] = yaml.safeLoad(configContent)
 
   // const filters: Filter[] = toolkit.config('.github/label-pr.yml');
-    toolkit.log.info(" Configured filters: ", filters);
+  toolkit.log.info(" Configured filters: ", filters);
 
-    if (!process.env.GITHUB_EVENT_PATH) {
-      toolkit.exit.failure('Process env GITHUB_EVENT_PATH is undefined');
-    } else {
-      const { owner, issue_number, repo }: IssuesListLabelsOnIssueParams = findRepositoryInformation(process.env.GITHUB_EVENT_PATH, toolkit.log, toolkit.exit);
-      const { pulls: { listFiles }, issues }: GitHub = toolkit.github;
+  if (!process.env.GITHUB_EVENT_PATH) {
+    toolkit.exit.failure('Process env GITHUB_EVENT_PATH is undefined');
+  } else {
+    const { owner, issue_number, repo }: IssuesListLabelsOnIssueParams = findRepositoryInformation(process.env.GITHUB_EVENT_PATH, toolkit.log, toolkit.exit);
+    const { pulls: { listFiles }, issues }: GitHub = toolkit.github;
 
-      // First, we need to retrieve the existing issue labels and filter them over the configured one in config file
-      const issueLabels: string[] = await findIssueLabels({ issue_number, owner, repo }, issues, filters);
+    // First, we need to retrieve the existing issue labels and filter them over the configured one in config file
+    const issueLabels: string[] = await findIssueLabels({ issue_number, owner, repo }, issues, filters);
 
-      const params: PullsListFilesParams = { owner, pull_number: issue_number, repo };
+    const params: PullsListFilesParams = { owner, pull_number: issue_number, repo };
 
-      await listFiles(params)
-        .then((response: Response<PullsListFilesResponse>) => response.data)
-        .then((files: PullsListFilesResponseItem[]) => {
-          toolkit.log.info('Checking files...', files.reduce((acc: string[], file: PullsListFilesResponseItem) => acc.concat(file.filename), []));
-          return files;
-        })
-        .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters, toolkit.log))
-        .then((eligibleFilters: Filter[]) => eligibleFilters.reduce((acc: string[], eligibleFilter: Filter) => acc.concat(eligibleFilter.labels), []))
-        .then((labels: string[]) => {
-            removeIssueLabels(intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);
-            return { issue_number, labels: getLabelsToAdd(labels, issueLabels, toolkit), owner, repo };
-          }
-        )
-        .then((addLabelsParams: IssuesAddLabelsParams) => issues.addLabels(addLabelsParams))
-        .then((value: Response<IssuesAddLabelsResponseItem[]>) => toolkit.log.info(`Adding label status: ${value.status}`))
-        .catch(reason => toolkit.exit.failure(reason));
-    }
-    toolkit.exit.success('Labels were update into pull request')
-  },
+    await listFiles(params)
+      .then((response: Response<PullsListFilesResponse>) => response.data)
+      .then((files: PullsListFilesResponseItem[]) => {
+        toolkit.log.info('Checking files...', files.reduce((acc: string[], file: PullsListFilesResponseItem) => acc.concat(file.filename), []));
+        return files;
+      })
+      .then((files: PullsListFilesResponseItem[]) => processListFilesResponses(files, filters, toolkit.log))
+      .then((eligibleFilters: Filter[]) => eligibleFilters.reduce((acc: string[], eligibleFilter: Filter) => acc.concat(eligibleFilter.labels), []))
+      .then((labels: string[]) => {
+        removeIssueLabels(intersectLabels(issueLabels, labels), toolkit, { owner, issue_number, repo }, issues);
+        return { issue_number, labels: getLabelsToAdd(labels, issueLabels, toolkit), owner, repo };
+      }
+      )
+      .then((addLabelsParams: IssuesAddLabelsParams) => issues.addLabels(addLabelsParams))
+      .then((value: Response<IssuesAddLabelsResponseItem[]>) => toolkit.log.info(`Adding label status: ${value.status}`))
+      .catch(reason => toolkit.exit.failure(reason));
+  }
+  toolkit.exit.success('Labels were update into pull request')
+},
   args
 );

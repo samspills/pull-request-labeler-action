@@ -46,7 +46,7 @@ const findIssueLabels = (issuesListLabelsOnIssueParams, issues, filters) => {
 const removeIssueLabels = (labels, { log, exit }, repository, issues) => {
     log.info('Labels to remove: ', labels);
     utils_1.buildIssueRemoveLabelParams(repository, labels)
-        .forEach(value => issues.removeLabel(value).catch(reason => exit.failure(reason)));
+        .forEach(value => issues.removeLabel(value).catch(reason => log.error(reason.message)));
 };
 // Build labels to add
 const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
