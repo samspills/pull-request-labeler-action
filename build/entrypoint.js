@@ -102,7 +102,8 @@ actions_toolkit_1.Toolkit.run(async (toolkit) => {
             return labelsToRemove;
         })
             .then((labelsToRemove) => labelsToRemove.map(label => ({ issue_number, name: label, owner, repo })))
-            .then((removeLabelParams) => removeLabelParams.map(params => issues.removeLabel(params)))
+            .then((removeLabelParams) => Promise.all(removeLabelParams.map(params => issues.removeLabel(params))))
+            .then(response => toolkit.log.info('Github label removal response: ', response))
             .catch(reason => toolkit.log.info(reason));
         await labelsToProcess
             .then((labels) => getLabelsToAdd(labels, issueLabels, toolkit))
