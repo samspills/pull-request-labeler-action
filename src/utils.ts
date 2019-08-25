@@ -9,19 +9,19 @@ export const addedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesR
 export const modifiedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
   files.filter(file => (file.status === "modified"));
 
-export const deletedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
-  files.filter(file => (file.status === "deleted"))
+export const removedFiles = (files: PullsListFilesResponseItem[]): PullsListFilesResponseItem[] =>
+  files.filter(file => (file.status === "removed"))
 
 // Process the list of files being committed to return the list of eligible filters (whose filename matches their regExp)
 export const processListFilesResponses = (files: PullsListFilesResponseItem[], filters: Filter[], log: LoggerFunc & Signale): Filter[] => {
   const eligible_nonstatus_filters: Filter[] = filters.filter(filter => files.find(file => new RegExp(filter.regExp).test(file.filename))
     && !filter.addedOnly
     && !filter.modifiedOnly
-    && !filter.deletedOnly);
+    && !filter.removedOnly);
   const eligible_added_filters: Filter[] = filters.filter(filter => filter.addedOnly && addedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
   const eligible_modified_filters: Filter[] = filters.filter(filter => filter.modifiedOnly && modifiedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
-  const eligible_deleted_filters: Filter[] = filters.filter(filter => filter.deletedOnly && deletedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
-  return [...eligible_nonstatus_filters, ...eligible_added_filters, ...eligible_modified_filters, ...eligible_deleted_filters];
+  const eligible_removed_filters: Filter[] = filters.filter(filter => filter.removedOnly && removedFiles(files).find(file => new RegExp(filter.regExp).test(file.filename)));
+  return [...eligible_nonstatus_filters, ...eligible_added_filters, ...eligible_modified_filters, ...eligible_removed_filters];
 };
 // Filter the list of provided labels to return those that are part of provided filters
 export const filterConfiguredIssueLabels = (labels: string[], filters: Filter[]): string[] => {
