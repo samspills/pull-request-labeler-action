@@ -55,7 +55,7 @@ const getLabelsToAdd = (labels, issueLabels, { log, exit }) => {
     const labelsToAdd = utils_1.intersectLabels(labels, issueLabels);
     log.info('Labels to add: ', labelsToAdd);
     if (labelsToAdd.length === 0) {
-        exit.neutral("No labels to add");
+        log.info("No labels to add");
     }
     return labelsToAdd;
 };

@@ -61,7 +61,7 @@ const getLabelsToAdd = (labels: string[], issueLabels: string[], { log, exit }: 
   const labelsToAdd: string[] = intersectLabels(labels, issueLabels);
   log.info('Labels to add: ', labelsToAdd);
   if (labelsToAdd.length === 0) {
-    exit.neutral("No labels to add");
+    log.info("No labels to add");
   }
   return labelsToAdd;
 };
